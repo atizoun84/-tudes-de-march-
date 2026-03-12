@@ -19,6 +19,11 @@
         .prompt-area { background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 10px; padding: 15px; font-size: 0.85rem; color: #333; min-height: 300px; white-space: pre-wrap; overflow-y: auto; max-height: 60vh; font-family: monospace; word-wrap: break-word; }
         footer { font-size: 0.8rem; color: #555; text-align: center; padding: 20px 0; }
         #network-status { position: fixed; top: 0; left: 0; right: 0; z-index: 2000; text-align: center; font-size: 0.75rem; padding: 2px; display: none; }
+        .data-content { display: none; margin-top: 10px; border-top: 1px solid #eee; padding-top: 10px; }
+        .badge-need { background-color: #f0f2f5; color: #075e54; border: 1px solid #ced4da; margin-right: 5px; margin-bottom: 5px; display: inline-flex; align-items: center; padding: 5px 12px; border-radius: 15px; font-size: 0.85rem; transition: 0.3s; }
+        .badge-need.selected { background-color: #dcf8c6; border-color: #25d366; font-weight: bold; }
+        .badge-need i { cursor: pointer; margin-left: 8px; color: #d32f2f; }
+        .form-check-input:checked { background-color: #25d366; border-color: #25d366; }
     </style>
 </head>
 <body>
@@ -40,44 +45,81 @@
                 <input type="hidden" id="editId">
                 
                 <div class="whatsapp-bubble shadow-sm">
-                    <label class="form-label fw-bold text-muted small">I. IDENTIFICATION</label>
+                    <label class="form-label fw-bold text-muted small">I. IDENTIFICATION DU TERRAIN</label>
                     <div class="mb-3">
-                        <label class="form-label">Milieu cible</label>
+                        <label class="form-label">Milieu cible / Ville</label>
                         <input type="text" class="form-control border-0 bg-light" id="userName" placeholder="Ex: Marché de Parakou, Gamia..." required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Fréquence du besoin</label>
+                        <select class="form-select border-0 bg-light" id="frequence">
+                            <option value="Quotidien">Quotidien</option>
+                            <option value="Hebdomadaire">Hebdomadaire</option>
+                            <option value="Occasionnel">Occasionnel</option>
+                        </select>
                     </div>
                 </div>
 
                 <div class="whatsapp-bubble shadow-sm">
-                    <label class="form-label fw-bold text-muted small">II. LES BESOINS</label>
+                    <label class="form-label fw-bold text-muted small">II. LES BESOINS & OFFRE</label>
                     <div id="domaineContainer" class="row px-3 mb-3">
-                        <div class="form-check col-6"><input class="form-check-input" type="checkbox" value="Consommation" name="domaine"> <label>Alimentation</label></div>
+                        <div class="form-check col-6"><input class="form-check-input" type="checkbox" value="Alimentation" name="domaine"> <label>Alimentation</label></div>
                         <div class="form-check col-6"><input class="form-check-input" type="checkbox" value="Technique" name="domaine"> <label>Maintenance</label></div>
                         <div class="form-check col-6"><input class="form-check-input" type="checkbox" value="Santé" name="domaine"> <label>Santé</label></div>
                         <div class="form-check col-6"><input class="form-check-input" type="checkbox" value="Éducation" name="domaine"> <label>Éducation</label></div>
+                        <div class="form-check col-6"><input class="form-check-input" type="checkbox" value="Transport" name="domaine"> <label>Transport</label></div>
+                        <div class="form-check col-6"><input class="form-check-input" type="checkbox" value="Services" name="domaine"> <label>Services</label></div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Articles/Services manquants ? (Ajouter puis cocher)</label>
+                        <div class="input-group mb-2">
+                            <input type="text" id="needInput" class="form-control border-0 bg-light" placeholder="Ex: Pain frais, Réparation moto...">
+                            <button class="btn btn-success" type="button" onclick="addNeed()"><i class="bi bi-plus-lg"></i></button>
+                        </div>
+                        <div id="needsList" class="mt-2 d-flex flex-wrap"></div>
+                        <input type="hidden" id="missingItem">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Solutions existantes</label>
+                        <input type="text" class="form-control border-0 bg-light" id="solutionsExistantes" placeholder="Qu'est-ce qui est utilisé actuellement ?">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Article/Service manquant ?</label>
-                        <textarea class="form-control border-0 bg-light" id="missingItem" rows="2"></textarea>
+                        <label class="form-label">Insuffisances des solutions</label>
+                        <textarea class="form-control border-0 bg-light" id="insuffisances" rows="2" placeholder="Pourquoi ça ne suffit pas ?"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Mode d'obtention actuel</label>
+                        <input type="text" class="form-control border-0 bg-light" id="commande" placeholder="Ex: Voyage à 20km, commande en ligne...">
                     </div>
                 </div>
 
                 <div class="whatsapp-bubble shadow-sm">
-                    <label class="form-label fw-bold text-muted small">III. ANALYSE DU PROBLÈME</label>
+                    <label class="form-label fw-bold text-muted small">III. ANALYSE DU PAIN POINT</label>
                     <div class="mb-3">
-                        <label class="form-label">Problème majeur (temps/argent) ?</label>
+                        <label class="form-label">Problème majeur (temps/argent/qualité) ?</label>
                         <textarea class="form-control border-0 bg-light" id="biggestProblem" rows="2" required></textarea>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Budget prêt à consacrer ?</label>
-                        <input type="text" class="form-control border-0 bg-light" id="maxPrice">
+                        <label class="form-label">Budget max prêt à consacrer (FCFA) ?</label>
+                        <input type="text" class="form-control border-0 bg-light" id="maxPrice" placeholder="Prix psychologique">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Prêt à payer immédiatement ?</label>
+                        <select class="form-select border-0 bg-light" id="payant">
+                            <option value="Oui">Oui, absolument</option>
+                            <option value="Non">Non, trop cher</option>
+                            <option value="Sous conditions">Sous conditions</option>
+                        </select>
                     </div>
                 </div>
 
                 <div class="d-grid gap-2">
-                    <button type="button" class="btn btn-whatsapp p-3 shadow" onclick="saveData()">
+                    <button type="button" id="btnSave" class="btn btn-whatsapp p-3 shadow" onclick="saveData()">
                         <i class="bi bi-cloud-arrow-up-fill me-2"></i> ENREGISTRER
                     </button>
-                    <button type="button" id="cancelEdit" class="btn btn-light" style="display:none;" onclick="resetForm()">Annuler</button>
+                    <button type="button" id="cancelEdit" class="btn btn-light" style="display:none;" onclick="resetForm()">Annuler la modification</button>
                 </div>
             </form>
         </div>
@@ -141,6 +183,7 @@
   const db = getDatabase(app);
   const pollRef = ref(db, 'sondages');
   let pollHistory = [];
+  let currentNeeds = []; // Stocke des objets {text: string, selected: boolean}
   const iaModal = new bootstrap.Modal(document.getElementById('iaModal'));
 
   console.log("Système de prompt stratégique V2 chargé.");
@@ -148,8 +191,53 @@
   onValue(pollRef, (snapshot) => {
       const data = snapshot.val();
       pollHistory = data ? Object.keys(data).map(key => ({ firebaseId: key, ...data[key] })) : [];
+      updateFilters();
       loadHistory();
   });
+
+  // Gestion dynamique des besoins
+  window.addNeed = () => {
+      const input = document.getElementById('needInput');
+      const val = input.value.trim();
+      if(val && !currentNeeds.some(n => n.text === val)) {
+          currentNeeds.push({text: val, selected: true});
+          renderNeeds();
+          input.value = "";
+      }
+  };
+
+  window.toggleNeedSelection = (index) => {
+      currentNeeds[index].selected = !currentNeeds[index].selected;
+      renderNeeds();
+  };
+
+  window.removeNeed = (index, event) => {
+      event.stopPropagation();
+      currentNeeds.splice(index, 1);
+      renderNeeds();
+  };
+
+  function renderNeeds() {
+      const container = document.getElementById('needsList');
+      const hiddenInput = document.getElementById('missingItem');
+      container.innerHTML = currentNeeds.map((n, i) => `
+          <div class="badge-need ${n.selected ? 'selected' : ''}" onclick="toggleNeedSelection(${i})">
+              <input type="checkbox" class="form-check-input me-2" ${n.selected ? 'checked' : ''} style="pointer-events:none">
+              ${n.text} 
+              <i class="bi bi-trash-fill ms-2" onclick="removeNeed(${i}, event)"></i>
+          </div>
+      `).join('');
+      hiddenInput.value = currentNeeds.filter(n => n.selected).map(n => n.text).join(', ');
+  }
+
+  function updateFilters() {
+      const filter = document.getElementById('globalFilter');
+      const currentVal = filter.value;
+      const milieux = [...new Set(pollHistory.map(h => h.nom))];
+      filter.innerHTML = '<option value="Tous">Tous les milieux</option>' + 
+          milieux.map(m => `<option value="${m}">${m}</option>`).join('');
+      filter.value = currentVal;
+  }
 
   window.toggleView = () => {
       const sv = document.getElementById('survey-view');
@@ -159,38 +247,129 @@
   };
 
   window.saveData = () => {
+      const editId = document.getElementById('editId').value;
       const domainesNodes = document.querySelectorAll('input[name="domaine"]:checked');
       const domainesList = Array.from(domainesNodes).map(cb => cb.value).join(', ');
 
       const payload = {
-          id: Date.now(),
+          id: editId ? parseInt(editId) : Date.now(),
           date: new Date().toLocaleString('fr-FR'),
-          nom: document.getElementById('userName').value,
+          nom: document.getElementById('userName').value.trim(),
+          frequence: document.getElementById('frequence').value,
           domaines: domainesList || "Non spécifié",
           itemManquant: document.getElementById('missingItem').value || "Aucun",
+          solutionsExistantes: document.getElementById('solutionsExistantes').value || "Inconnu",
+          insuffisances: document.getElementById('insuffisances').value || "Inconnu",
+          commande: document.getElementById('commande').value || "Inconnu",
           probleme: document.getElementById('biggestProblem').value,
           prixMax: document.getElementById('maxPrice').value || "Non spécifié",
-          commande: "En personne", 
-          contact: "Aucun",        
-          frequence: "Jamais",    
-          payant: "Oui"           
+          payant: document.getElementById('payant').value
       };
+
       if(!payload.nom || !payload.probleme) return alert("Champs obligatoires !");
-      push(pollRef, payload).then(() => { alert("Enregistré !"); document.getElementById('pollForm').reset(); });
+
+      if(editId) {
+          const item = pollHistory.find(h => h.id == editId);
+          update(ref(db, `sondages/${item.firebaseId}`), payload).then(() => {
+              alert("Modification enregistrée !");
+              resetForm();
+          });
+      } else {
+          push(pollRef, payload).then(() => { 
+              alert("Enregistré avec succès !"); 
+              resetForm(); 
+          });
+      }
+  };
+
+  window.resetForm = () => {
+      document.getElementById('pollForm').reset();
+      document.getElementById('editId').value = "";
+      currentNeeds = [];
+      renderNeeds();
+      document.getElementById('btnSave').innerHTML = '<i class="bi bi-cloud-arrow-up-fill me-2"></i> ENREGISTRER';
+      document.getElementById('cancelEdit').style.display = "none";
   };
 
   window.loadHistory = () => {
+      const filter = document.getElementById('globalFilter').value;
       const container = document.getElementById('history-container');
-      container.innerHTML = pollHistory.map(item => `
+      const filteredData = filter === "Tous" ? pollHistory : pollHistory.filter(h => h.nom === filter);
+
+      container.innerHTML = filteredData.map(item => `
           <div class="card p-3 mb-2">
-              <strong>${item.nom}</strong>
-              <p class="small mb-1">${item.probleme}</p>
-              <button class="btn btn-sm btn-success" onclick="openIAModal('${item.firebaseId}')">Prompt IA</button>
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <strong>${item.nom}</strong><br>
+                    <small class="text-muted">${item.date}</small>
+                </div>
+                <span class="badge bg-success">${item.payant}</span>
+              </div>
+              <p class="small mt-2 mb-1"><strong>Problème :</strong> ${item.probleme}</p>
+              
+              <div id="content-${item.id}" class="data-content small">
+                <hr>
+                <p><strong>Besoins relevés :</strong> ${item.itemManquant}</p>
+                <p><strong>Domaines :</strong> ${item.domaines}</p>
+                <p><strong>Solutions Actuelles :</strong> ${item.solutionsExistantes}</p>
+                <p><strong>Insuffisances :</strong> ${item.insuffisances}</p>
+                <p><strong>Prix Max :</strong> ${item.prixMax} FCFA</p>
+                <p><strong>Fréquence :</strong> ${item.frequence}</p>
+              </div>
+
+              <div class="d-flex gap-2 mt-2">
+                  <button class="btn btn-sm btn-outline-primary" onclick="toggleDetails('${item.id}')">
+                    <i class="bi bi-eye"></i> Afficher
+                  </button>
+                  <button class="btn btn-sm btn-success" onclick="openIAModal('${item.firebaseId}')">Prompt IA</button>
+                  <button class="btn btn-sm btn-warning" onclick="editItem('${item.id}')"><i class="bi bi-pencil"></i></button>
+                  <button class="btn btn-sm btn-danger" onclick="deleteItem('${item.firebaseId}')"><i class="bi bi-trash"></i></button>
+              </div>
           </div>
       `).join('');
   };
 
-  // --- FONCTION RENOMMÉE POUR ÉVITER LE CACHE ---
+  window.toggleDetails = (id) => {
+      const div = document.getElementById(`content-${id}`);
+      div.style.display = div.style.display === 'block' ? 'none' : 'block';
+  };
+
+  window.editItem = (id) => {
+      const item = pollHistory.find(h => h.id == id);
+      document.getElementById('editId').value = item.id;
+      document.getElementById('userName').value = item.nom;
+      document.getElementById('frequence').value = item.frequence;
+      
+      // Reconstruction de la liste des besoins
+      currentNeeds = item.itemManquant !== "Aucun" ? item.itemManquant.split(', ').map(n => ({text: n, selected: true})) : [];
+      renderNeeds();
+
+      document.getElementById('solutionsExistantes').value = item.solutionsExistantes || "";
+      document.getElementById('insuffisances').value = item.insuffisances || "";
+      document.getElementById('commande').value = item.commande;
+      document.getElementById('biggestProblem').value = item.probleme;
+      document.getElementById('maxPrice').value = item.prixMax;
+      document.getElementById('payant').value = item.payant;
+      
+      const domains = item.domaines.split(', ');
+      document.querySelectorAll('input[name="domaine"]').forEach(cb => {
+          cb.checked = domains.includes(cb.value);
+      });
+
+      document.getElementById('btnSave').innerHTML = '<i class="bi bi-check-circle-fill me-2"></i> ENREGISTRER MODIFICATION';
+      document.getElementById('cancelEdit').style.display = "block";
+      toggleView();
+  };
+
+  window.deleteItem = (fId) => {
+      const code = prompt("Entrez le code de sécurité pour supprimer :");
+      if(code === "11984") {
+          remove(ref(db, `sondages/${fId}`)).then(() => alert("Supprimé !"));
+      } else {
+          alert("Code incorrect !");
+      }
+  };
+
   function getStrategicPrompt(data) {
       const dataArray = Array.isArray(data) ? data : [data];
       const dataStr = JSON.stringify(dataArray, null, 2);
@@ -205,21 +384,21 @@ PARTIE 3 : MANAGEMENT & RH (Équipe, Compétences critiques, Statut juridique)
 PARTIE 4 : COMMERCIALE & MARKETING (Personas, Canaux d'acquisition, Prix)
 PARTIE 5 : FINANCIÈRE (Investissement, Charges, Seuil de rentabilité)
 PARTIE 6 : JURIDIQUE (Réglementation, Protection, RGPD)
-PARTIE 7 : PLAN D'AFFAIRES (Résumé, Roadmap J0 à J360)
+PARTIE 7 : PLAN d'AFFAIRES (Résumé, Roadmap J0 à J360)
 PARTIE 8 : RISQUES (Matrice des risques et plans de contingence)
 PARTIE 9 : CONCLUSION (Actions immédiates sous 48h)`;
   }
 
   window.openIAModal = (fId) => {
       const item = pollHistory.find(h => h.firebaseId === fId);
-      // Appel de la nouvelle fonction
       document.getElementById('promptContent').textContent = getStrategicPrompt(item);
       iaModal.show();
   };
 
   window.openGlobalIAModal = () => {
-      // Appel de la nouvelle fonction
-      document.getElementById('promptContent').textContent = getStrategicPrompt(pollHistory);
+      const filter = document.getElementById('globalFilter').value;
+      const data = filter === "Tous" ? pollHistory : pollHistory.filter(h => h.nom === filter);
+      document.getElementById('promptContent').textContent = getStrategicPrompt(data);
       iaModal.show();
   };
 
