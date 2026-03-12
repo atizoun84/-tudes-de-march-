@@ -16,7 +16,7 @@
         .btn-whatsapp:hover { background-color: #128c7e; color: white; }
         .whatsapp-bubble { background-color: #fff; padding: 15px; border-radius: 15px; margin-bottom: 20px; position: relative; }
         .section-title { color: #075e54; border-left: 4px solid #25d366; padding-left: 10px; margin-bottom: 20px; }
-        .prompt-area { background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 10px; padding: 15px; font-size: 0.85rem; color: #333; min-height: 300px; white-space: pre-wrap; overflow-y: auto; max-height: 60vh; font-family: monospace; }
+        .prompt-area { background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 10px; padding: 15px; font-size: 0.85rem; color: #333; min-height: 300px; white-space: pre-wrap; overflow-y: auto; max-height: 60vh; font-family: monospace; word-wrap: break-word; }
         footer { font-size: 0.8rem; color: #555; text-align: center; padding: 20px 0; }
         #network-status { position: fixed; top: 0; left: 0; right: 0; z-index: 2000; text-align: center; font-size: 0.75rem; padding: 2px; display: none; }
     </style>
@@ -111,8 +111,8 @@
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title"><i class="bi bi-robot me-2"></i> Prompt Stratégique Intégral</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        <h5 class="modal-title text-dark"><i class="bi bi-robot me-2 text-success"></i> Prompt Stratégique Intégral</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
         <div id="promptContent" class="prompt-area"></div>
@@ -143,7 +143,6 @@
   let pollHistory = [];
   const iaModal = new bootstrap.Modal(document.getElementById('iaModal'));
 
-  // CHARGEMENT DONNÉES
   onValue(pollRef, (snapshot) => {
       const data = snapshot.val();
       pollHistory = data ? Object.keys(data).map(key => ({ firebaseId: key, ...data[key] })) : [];
@@ -158,12 +157,21 @@
   };
 
   window.saveData = () => {
+      const domainesNodes = document.querySelectorAll('input[name="domaine"]:checked');
+      const domainesList = Array.from(domainesNodes).map(cb => cb.value).join(', ');
+
       const payload = {
           id: Date.now(),
-          date: new Date().toLocaleString(),
+          date: new Date().toLocaleString('fr-FR'),
           nom: document.getElementById('userName').value,
+          domaines: domainesList || "Non spécifié",
+          itemManquant: document.getElementById('missingItem').value || "Aucun",
           probleme: document.getElementById('biggestProblem').value,
-          prixMax: document.getElementById('maxPrice').value || "N/A"
+          prixMax: document.getElementById('maxPrice').value || "Non spécifié",
+          commande: "En personne", // Valeur par défaut pour la structure demandée
+          contact: "Aucun",        // Valeur par défaut pour la structure demandée
+          frequence: "Jamais",    // Valeur par défaut pour la structure demandée
+          payant: "Oui"           // Valeur par défaut pour la structure demandée
       };
       if(!payload.nom || !payload.probleme) return alert("Champs obligatoires !");
       push(pollRef, payload).then(() => { alert("Enregistré !"); document.getElementById('pollForm').reset(); });
@@ -180,9 +188,14 @@
       `).join('');
   };
 
-  // --- LE GÉNÉRATEUR DE PROMPT (TEXTE INTÉGRAL) ---
+  // --- LE GÉNÉRATEUR DE PROMPT MIS À JOUR (FORMAT DEMANDÉ) ---
   function getFullPrompt(data) {
-      const dataStr = JSON.stringify(data, null, 2);
+      // Transformation en tableau si c'est un objet unique pour garder le format JSON [...]
+      const dataArray = Array.isArray(data) ? data : [data];
+      
+      // Nettoyage des données pour l'affichage (on retire les propriétés techniques si nécessaire, mais ici on garde tout pour le JSON)
+      const dataStr = JSON.stringify(dataArray, null, 2);
+
       return `Tu es un expert en stratégie d'entreprise. Voici les données de mon sondage :
 ${dataStr}
 
@@ -209,14 +222,11 @@ PARTIE 9 : CONCLUSION (Actions immédiates sous 48h)`;
       iaModal.show();
   };
 
-  // --- SYSTÈME DE COPIE ROBUSTE ---
   document.getElementById('btnCopyPrompt').addEventListener('click', () => {
       const text = document.getElementById('promptContent').textContent;
-      
       if (navigator.clipboard && window.isSecureContext) {
           navigator.clipboard.writeText(text).then(() => alert("Copié avec succès !"));
       } else {
-          // Fallback pour mobile/non-https
           const textArea = document.createElement("textarea");
           textArea.value = text;
           document.body.appendChild(textArea);
