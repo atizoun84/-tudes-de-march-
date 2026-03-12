@@ -1,0 +1,20 @@
+{
+  "name": "Étude de Terrain Pro",
+  "short_name": "Terrain",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#e5ddd5",
+  "theme_color": "#075e54",
+  "icons": [
+    {
+      "src": "logoapp.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "logoapp.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

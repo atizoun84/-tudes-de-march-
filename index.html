@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sondage Utilité Locale</title>
+    <meta name="theme-color" content="#075e54">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="logoapp.png">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <style>
+        body {
+            background-color: #e5ddd5; /* Fond WhatsApp */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar {
+            background-color: #075e54; /* Vert foncé WhatsApp */
+            color: white;
+        }
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .btn-whatsapp {
+            background-color: #25d366;
+            color: white;
+            font-weight: 600;
+            border-radius: 20px;
+        }
+        .btn-whatsapp:hover {
+            background-color: #128c7e;
+            color: white;
+        }
+        .whatsapp-bubble {
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        .section-title {
+            color: #075e54;
+            border-left: 4px solid #25d366;
+            padding-left: 10px;
+            margin-bottom: 20px;
+        }
+        .history-item {
+            border-bottom: 1px solid #ddd;
+            padding: 10px 0;
+        }
+        .badge-wa {
+            background-color: #128c7e;
+        }
+        /* Style spécifique pour la modale IA */
+        .modal-content { border-radius: 15px; border: none; }
+        .modal-header { background-color: #075e54; color: white; border-top-left-radius: 15px; border-top-right-radius: 15px; }
+        .prompt-area { background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 10px; padding: 15px; font-size: 0.9rem; color: #333; min-height: 200px; white-space: pre-wrap; }
+        footer { font-size: 0.8rem; color: #555; text-align: center; padding: 20px 0; }
+
+        /* NOUVEAUX STYLES : Notifications & Bouton Installation */
+        #network-status {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 2000;
+            text-align: center;
+            font-size: 0.75rem;
+            padding: 2px;
+            display: none;
+            font-weight: 600;
+        }
+        #install-pwa-btn {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            display: none;
+            z-index: 1050;
+            border-radius: 50px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            border: 2px solid white;
+        }
+    </style>
+</head>
+<body>
+
+<div id="network-status"></div>
+
+<nav class="navbar mb-4">
+    <div class="container d-flex justify-content-between">
+        <span class="navbar-brand mb-0 h1 text-white"><i class="bi bi-whatsapp me-2"></i> Étude de Terrain</span>
+        <button class="btn btn-sm btn-outline-light" onclick="toggleView()">Historique</button>
+    </div>
+</nav>
+
+<div class="container mb-5">
+    
+    <div id="survey-view">
+        <div class="card p-4">
+            <h4 class="section-title">Nouveau Questionnaire</h4>
+            <form id="pollForm">
+                <input type="hidden" id="editId">
+                <div class="whatsapp-bubble shadow-sm">
+                    <label class="form-label fw-bold text-muted small">I. IDENTIFICATION</label>
+                    <div class="mb-3">
+                        <label class="form-label">Milieu cible</label>
+                        <input type="text" class="form-control border-0 bg-light" id="userName" list="milieuxSuggestions" placeholder="Ex: Marché central, Quartier résidentiel, Zone rurale..." required>
+                        <datalist id="milieuxSuggestions"></datalist>
+                    </div>
+                </div>
+
+                <div class="whatsapp-bubble shadow-sm">
+                    <label class="form-label fw-bold text-muted small">II. LES BESOINS (LE QUOI)</label>
+                    <p class="mb-2">1. Domaine de difficulté prioritaire :</p>
+                    <div class="row px-3" id="domaineContainer">
+                        <div class="form-check col-md-6 mb-2">
+                            <input class="form-check-input" type="checkbox" value="Consommation" name="domaine">
+                            <label class="form-check-label">Consommation / Alimentation</label>
+                        </div>
+                        <div class="form-check col-md-6 mb-2">
+                            <input class="form-check-input" type="checkbox" value="Technique" name="domaine">
+                            <label class="form-check-label">Services Techniques / Maintenance</label>
+                        </div>
+                        <div class="form-check col-md-6 mb-2">
+                            <input class="form-check-input" type="checkbox" value="Santé" name="domaine">
+                            <label class="form-check-label">Santé et bien-être</label>
+                        </div>
+                        <div class="form-check col-md-6 mb-2">
+                            <input class="form-check-input" type="checkbox" value="Éducation" name="domaine">
+                            <label class="form-check-label">Éducation et formation</label>
+                        </div>
+                        <div class="form-check col-md-6 mb-2">
+                            <input class="form-check-input" type="checkbox" value="Transport" name="domaine">
+                            <label class="form-check-label">Transport et logistique</label>
+                        </div>
+                        <div class="form-check col-md-6 mb-2">
+                            <input class="form-check-input" type="checkbox" value="Gestion" name="domaine">
+                            <label class="form-check-label">Gestion / Finance / Stocks</label>
+                        </div>
+                    </div>
+                    <div class="input-group mt-2">
+                        <input type="text" id="newDomaine" class="form-control form-control-sm border-0 bg-light" placeholder="Ajouter un autre domaine...">
+                        <button class="btn btn-outline-success btn-sm" type="button" onclick="addNewDomaine()">Ajouter</button>
+                    </div>
+
+                    <div class="mt-3">
+                        <label class="form-label">2. Qu'avez-vous voulu obtenir récemment sans le trouver dans votre zone ?</label>
+                        <textarea class="form-control border-0 bg-light" id="missingItem" rows="2"></textarea>
+                    </div>
+
+                    <div class="mt-3">
+                        <label class="form-label">3. Fréquence de déplacement vers une grande ville pour des services :</label>
+                        <select class="form-select border-0 bg-light" id="travelFrequency">
+                            <option value="Jamais">Jamais</option>
+                            <option value="Rarement">Rarement (moins de 1 fois/mois)</option>
+                            <option value="Régulièrement">Régulièrement (1 à 2 fois/mois)</option>
+                            <option value="Très souvent">Très souvent (plus de 3 fois/mois)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="whatsapp-bubble shadow-sm">
+                    <label class="form-label fw-bold text-muted small">III. ANALYSE DE LA DOULEUR (LE POURQUOI)</label>
+                    <div class="mb-3">
+                        <label class="form-label">4. Quel problème vous fait perdre le plus de temps ou d'argent ?</label>
+                        <textarea class="form-control border-0 bg-light" id="biggestProblem" rows="2" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">5. Seriez-vous prêt à payer pour une solution de proximité ?</label>
+                        <select class="form-select border-0 bg-light" id="willingToPay">
+                            <option value="Oui">Oui, absolument</option>
+                            <option value="Dépend">Ça dépend du prix</option>
+                            <option value="Non">Non, pas pour le moment</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">6. Quel budget estimatif seriez-vous prêt à consacrer à ce service ?</label>
+                        <input type="text" class="form-control border-0 bg-light" id="maxPrice" placeholder="Ex: Montant en monnaie locale">
+                    </div>
+                </div>
+
+                <div class="whatsapp-bubble shadow-sm">
+                    <label class="form-label fw-bold text-muted small">IV. ACCESSIBILITÉ (LE COMMENT)</label>
+                    <div class="mb-3">
+                        <label class="form-label">7. Moyen de commande ou d'accès préféré :</label>
+                        <select class="form-select border-0 bg-light" id="orderMethod">
+                            <option value="En personne">En personne (Local physique)</option>
+                            <option value="Appel">Appel téléphonique direct</option>
+                            <option value="WhatsApp">Message WhatsApp</option>
+                            <option value="Digital">Application / Plateforme Web</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">8. Informations de contact du répondant (Optionnel)</label>
+                        <input type="text" class="form-control border-0 bg-light" id="contact" placeholder="Tél ou e-mail">
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-whatsapp p-3 shadow" onclick="saveData()">
+                        <i class="bi bi-cloud-arrow-up-fill me-2"></i> ENREGISTRER LA RÉPONSE
+                    </button>
+                    <button type="button" id="cancelEdit" class="btn btn-light" style="display:none;" onclick="resetForm()">Annuler la modification</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="history-view" style="display: none;">
+        <div class="card p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="section-title mb-0">Historique des Réponses</h4>
+            </div>
+            
+            <div class="whatsapp-bubble shadow-sm mb-4">
+                <label class="form-label fw-bold small">FILTRE / PROMPT GLOBAL</label>
+                <div class="input-group">
+                    <select class="form-select border-0 bg-light" id="globalFilter" onchange="loadHistory()">
+                        <option value="Tous">Tous les milieux</option>
+                    </select>
+                    <button class="btn btn-success" onclick="openGlobalIAModal()">
+                        <i class="bi bi-stars"></i> Prompt Global
+                    </button>
+                </div>
+            </div>
+
+            <div id="history-container">
+                <p class="text-center text-muted">Chargement des données...</p>
+            </div>
+            
+            <div class="d-flex justify-content-between mt-3">
+                <button class="btn btn-secondary" onclick="toggleView()">Retour au sondage</button>
+                <button class="btn btn-outline-danger btn-sm" onclick="clearAllData()">Effacer tout l'historique</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <strong>Concepteur :</strong> Atizoun Plateny AMOUSSOU<br>
+        <i class="bi bi-envelope"></i> atizoun@gmail.com | <i class="bi bi-telephone"></i> 01 97 74 40 35
+    </footer>
+</div>
+
+<button id="install-pwa-btn" class="btn btn-whatsapp">
+    <i class="bi bi-download me-2"></i> Installer l'App
+</button>
+
+<div class="modal fade" id="iaModal" tabindex="-1" aria-labelledby="iaModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content shadow-lg">
+      <div class="modal-header">
+        <h5 class="modal-title" id="iaModalLabel"><i class="bi bi-robot me-2"></i> Prompt d'Analyse Stratégique</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p class="small text-muted mb-2">Copiez ce prompt pour obtenir une analyse complète par IA.</p>
+        <div id="promptContent" class="prompt-area"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+        <button type="button" class="btn btn-whatsapp px-4" id="btnCopyPrompt">
+            <i class="bi bi-clipboard-check me-2"></i> Copier le Prompt
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+  import { getDatabase, ref, set, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAtJSiRP8WhMdRK4S1XYLNXa5TGLJ6MIsY",
+    authDomain: "etude-marche-23ccd.firebaseapp.com",
+    projectId: "etude-marche-23ccd",
+    storageBucket: "etude-marche-23ccd.firebasestorage.app",
+    messagingSenderId: "1089764697270",
+    appId: "1:1089764697270:web:60c635ed0b47d984827217",
+    databaseURL: "https://etude-marche-23ccd-default-rtdb.europe-west1.firebasedatabase.app/"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const pollRef = ref(db, 'sondages');
+
+  // --- Logique Réseau & Installation PWA ---
+  let deferredPrompt;
+  const installBtn = document.getElementById('install-pwa-btn');
+  const statusDiv = document.getElementById('network-status');
+
+  function updateStatus() {
+      if (navigator.onLine) {
+          statusDiv.style.display = 'block';
+          statusDiv.style.backgroundColor = '#25d366';
+          statusDiv.style.color = 'white';
+          statusDiv.innerHTML = '<i class="bi bi-wifi"></i> Vous êtes en ligne - Synchronisation active';
+          setTimeout(() => { statusDiv.style.display = 'none'; }, 3000);
+      } else {
+          statusDiv.style.display = 'block';
+          statusDiv.style.backgroundColor = '#f44336';
+          statusDiv.style.color = 'white';
+          statusDiv.innerHTML = '<i class="bi bi-wifi-off"></i> Mode hors ligne - Données locales uniquement';
+      }
+  }
+
+  window.addEventListener('online', updateStatus);
+  window.addEventListener('offline', updateStatus);
+  window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.style.display = 'block';
+  });
+
+  installBtn.addEventListener('click', async () => {
+      if (deferredPrompt) {
+          deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+          if (outcome === 'accepted') installBtn.style.display = 'none';
+          deferredPrompt = null;
+      }
+  });
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(err => console.log('SW Error', err));
+        updateStatus();
+    });
+  }
+
+  // --- Logique Applicative ---
+  const surveyView = document.getElementById('survey-view');
+  const historyView = document.getElementById('history-view');
+  const historyContainer = document.getElementById('history-container');
+  const listSuggestions = document.getElementById('milieuxSuggestions');
+  const SECURITY_CODE = "11984";
+  let pollHistory = [];
+  let bootstrapModal;
+
+  document.addEventListener('DOMContentLoaded', () => {
+      bootstrapModal = new bootstrap.Modal(document.getElementById('iaModal'));
+      document.getElementById('btnCopyPrompt').addEventListener('click', copyPrompt);
+      
+      onValue(pollRef, (snapshot) => {
+          const data = snapshot.val();
+          pollHistory = [];
+          if (data) {
+              Object.keys(data).forEach(key => {
+                  pollHistory.push({ firebaseId: key, ...data[key] });
+              });
+              pollHistory.sort((a, b) => b.id - a.id);
+          }
+          loadHistory();
+      });
+  });
+
+  window.toggleView = function() {
+      if (surveyView.style.display === 'none') {
+          surveyView.style.display = 'block';
+          historyView.style.display = 'none';
+      } else {
+          surveyView.style.display = 'none';
+          historyView.style.display = 'block';
+          loadHistory();
+      }
+  };
+
+  window.addNewDomaine = function() {
+      const val = document.getElementById('newDomaine').value.trim();
+      if(val) {
+          const container = document.getElementById('domaineContainer');
+          const div = document.createElement('div');
+          div.className = 'form-check col-md-6 mb-2';
+          div.innerHTML = `<input class="form-check-input" type="checkbox" value="${val}" name="domaine" checked>
+                           <label class="form-check-label">${val}</label>`;
+          container.appendChild(div);
+          document.getElementById('newDomaine').value = '';
+      }
+  };
+
+  window.saveData = function() {
+      const checkboxes = document.querySelectorAll('input[name="domaine"]:checked');
+      const domaines = Array.from(checkboxes).map(cb => cb.value);
+      const editId = document.getElementById('editId').value;
+
+      if(editId) {
+          const code = prompt("Code de sécurité (11984) pour modifier :");
+          if(code !== SECURITY_CODE) return alert("Code incorrect.");
+      }
+      
+      const payload = {
+          id: editId ? parseInt(editId) : Date.now(),
+          date: new Date().toLocaleString('fr-FR'),
+          nom: document.getElementById('userName').value,
+          domaines: domaines.join(', '),
+          itemManquant: document.getElementById('missingItem').value,
+          frequence: document.getElementById('travelFrequency').value,
+          probleme: document.getElementById('biggestProblem').value,
+          payant: document.getElementById('willingToPay').value,
+          prixMax: document.getElementById('maxPrice').value || "Non spécifié",
+          commande: document.getElementById('orderMethod').value,
+          contact: document.getElementById('contact').value || "Aucun"
+      };
+
+      if(!payload.nom || !payload.probleme) return alert("Remplissez le milieu et le problème.");
+
+      if(editId) {
+          const item = pollHistory.find(h => h.id == editId);
+          update(ref(db, `sondages/${item.firebaseId}`), payload)
+          .then(() => { alert("Modifié !"); toggleView(); resetForm(); });
+      } else {
+          push(pollRef, payload).then(() => { alert("Enregistré !"); resetForm(); });
+      }
+  };
+
+  window.resetForm = function() {
+      document.getElementById('pollForm').reset();
+      document.getElementById('editId').value = '';
+      document.getElementById('cancelEdit').style.display = 'none';
+  };
+
+  function updateFilterOptions() {
+      const filter = document.getElementById('globalFilter');
+      const currentVal = filter.value;
+      const uniqueMilieux = [...new Set(pollHistory.map(h => h.nom))];
+      
+      filter.innerHTML = '<option value="Tous">Tous les milieux</option>';
+      uniqueMilieux.forEach(m => { filter.innerHTML += `<option value="${m}">${m}</option>`; });
+      filter.value = currentVal;
+
+      listSuggestions.innerHTML = '';
+      uniqueMilieux.forEach(m => { listSuggestions.innerHTML += `<option value="${m}">`; });
+  }
+
+  window.loadHistory = function() {
+      updateFilterOptions();
+      const filterVal = document.getElementById('globalFilter').value;
+      const filteredData = filterVal === "Tous" ? pollHistory : pollHistory.filter(h => h.nom === filterVal);
+
+      if (filteredData.length === 0) {
+          historyContainer.innerHTML = '<p class="text-center text-muted">Aucune réponse.</p>';
+          return;
+      }
+
+      historyContainer.innerHTML = filteredData.map((item) => `
+          <div class="history-item border p-3 rounded mb-3 bg-white">
+              <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                      <span class="badge badge-wa mb-2">${item.date}</span>
+                      <strong class="text-success d-block">${item.nom}</strong>
+                  </div>
+                  <div class="btn-group">
+                      <button class="btn btn-outline-primary btn-sm" onclick="editEntry(${item.id})"><i class="bi bi-pencil"></i></button>
+                      <button class="btn btn-outline-danger btn-sm" onclick="deleteEntry('${item.firebaseId}')"><i class="bi bi-trash"></i></button>
+                  </div>
+              </div>
+              <div class="mt-2 d-flex gap-2">
+                  <button class="btn btn-sm btn-light border" type="button" data-bs-toggle="collapse" data-bs-target="#detail-${item.id}">
+                      <i class="bi bi-eye"></i> Détails
+                  </button>
+                  <button class="btn btn-success btn-sm" onclick="openIAModal(${item.id})">
+                      <i class="bi bi-robot"></i> Prompt IA
+                  </button>
+              </div>
+              <div class="collapse mt-2" id="detail-${item.id}">
+                  <div class="card card-body small bg-light border-0">
+                      <strong>Milieu:</strong> ${item.nom} <br>
+                      <strong>Domaines:</strong> ${item.domaines} <br>
+                      <strong>Problème:</strong> <span class="text-danger">${item.probleme}</span> <br>
+                      <strong>Prêt à payer:</strong> ${item.payant} (${item.prixMax}) <br>
+                      <strong>Contact:</strong> ${item.contact}
+                  </div>
+              </div>
+          </div>
+      `).join('');
+  };
+
+  window.editEntry = function(id) {
+      const item = pollHistory.find(h => h.id == id);
+      if(!item) return;
+      document.getElementById('editId').value = item.id;
+      document.getElementById('userName').value = item.nom;
+      document.getElementById('missingItem').value = item.itemManquant;
+      document.getElementById('travelFrequency').value = item.frequence;
+      document.getElementById('biggestProblem').value = item.probleme;
+      document.getElementById('willingToPay').value = item.payant;
+      document.getElementById('maxPrice').value = item.prixMax;
+      document.getElementById('orderMethod').value = item.commande;
+      document.getElementById('contact').value = item.contact;
+      document.getElementById('cancelEdit').style.display = 'block';
+      toggleView();
+  };
+
+  window.deleteEntry = function(firebaseId) {
+      const code = prompt("Code de sécurité (11984) pour supprimer :");
+      if(code === SECURITY_CODE) {
+          remove(ref(db, `sondages/${firebaseId}`)).then(() => alert("Supprimé."));
+      } else { alert("Code incorrect."); }
+  };
+
+  window.openIAModal = function(id) {
+      const item = pollHistory.find(h => h.id == id);
+      const promptTxt = `Agis en tant qu'expert en stratégie. Analyse ce sondage :\n\n${JSON.stringify(item, null, 2)}\n\nMissions : 1. Viabilité 2. MVP 3. Tarification.`;
+      document.getElementById('promptContent').innerText = promptTxt;
+      bootstrapModal.show();
+  };
+
+  window.openGlobalIAModal = function() {
+      const filterVal = document.getElementById('globalFilter').value;
+      const filteredData = filterVal === "Tous" ? pollHistory : pollHistory.filter(h => h.nom === filterVal);
+      if(filteredData.length === 0) return alert("Pas de données.");
+      const promptTxt = `Analyse globale pour le milieu ${filterVal} sur ${filteredData.length} réponses :\n\n${JSON.stringify(filteredData, null, 2)}`;
+      document.getElementById('promptContent').innerText = promptTxt;
+      bootstrapModal.show();
+  };
+
+  function copyPrompt() {
+      navigator.clipboard.writeText(document.getElementById('promptContent').innerText).then(() => alert("Copié !"));
+  }
+
+  window.clearAllData = function() {
+      const code = prompt("Effacer TOUT ? Code (11984) :");
+      if(code === SECURITY_CODE) {
+          remove(pollRef).then(() => alert("Base vidée."));
+      }
+  };
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
