@@ -143,6 +143,8 @@
   let pollHistory = [];
   const iaModal = new bootstrap.Modal(document.getElementById('iaModal'));
 
+  console.log("Système de prompt stratégique V2 chargé.");
+
   onValue(pollRef, (snapshot) => {
       const data = snapshot.val();
       pollHistory = data ? Object.keys(data).map(key => ({ firebaseId: key, ...data[key] })) : [];
@@ -168,10 +170,10 @@
           itemManquant: document.getElementById('missingItem').value || "Aucun",
           probleme: document.getElementById('biggestProblem').value,
           prixMax: document.getElementById('maxPrice').value || "Non spécifié",
-          commande: "En personne", // Valeur par défaut pour la structure demandée
-          contact: "Aucun",        // Valeur par défaut pour la structure demandée
-          frequence: "Jamais",    // Valeur par défaut pour la structure demandée
-          payant: "Oui"           // Valeur par défaut pour la structure demandée
+          commande: "En personne", 
+          contact: "Aucun",        
+          frequence: "Jamais",    
+          payant: "Oui"           
       };
       if(!payload.nom || !payload.probleme) return alert("Champs obligatoires !");
       push(pollRef, payload).then(() => { alert("Enregistré !"); document.getElementById('pollForm').reset(); });
@@ -188,12 +190,9 @@
       `).join('');
   };
 
-  // --- LE GÉNÉRATEUR DE PROMPT MIS À JOUR (FORMAT DEMANDÉ) ---
-  function getFullPrompt(data) {
-      // Transformation en tableau si c'est un objet unique pour garder le format JSON [...]
+  // --- FONCTION RENOMMÉE POUR ÉVITER LE CACHE ---
+  function getStrategicPrompt(data) {
       const dataArray = Array.isArray(data) ? data : [data];
-      
-      // Nettoyage des données pour l'affichage (on retire les propriétés techniques si nécessaire, mais ici on garde tout pour le JSON)
       const dataStr = JSON.stringify(dataArray, null, 2);
 
       return `Tu es un expert en stratégie d'entreprise. Voici les données de mon sondage :
@@ -213,12 +212,14 @@ PARTIE 9 : CONCLUSION (Actions immédiates sous 48h)`;
 
   window.openIAModal = (fId) => {
       const item = pollHistory.find(h => h.firebaseId === fId);
-      document.getElementById('promptContent').textContent = getFullPrompt(item);
+      // Appel de la nouvelle fonction
+      document.getElementById('promptContent').textContent = getStrategicPrompt(item);
       iaModal.show();
   };
 
   window.openGlobalIAModal = () => {
-      document.getElementById('promptContent').textContent = getFullPrompt(pollHistory);
+      // Appel de la nouvelle fonction
+      document.getElementById('promptContent').textContent = getStrategicPrompt(pollHistory);
       iaModal.show();
   };
 
@@ -233,7 +234,7 @@ PARTIE 9 : CONCLUSION (Actions immédiates sous 48h)`;
           textArea.select();
           try {
               document.execCommand('copy');
-              alert("Copié (Méthode de secours) !");
+              alert("Copié !");
           } catch (err) {
               alert("Erreur de copie");
           }
